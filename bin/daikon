@@ -58,8 +58,8 @@ def get_argument_parser():
                        help='the folder to load model and vocabulary files from.')
     score.add_argument('-a', '--corpus_average', default=False, action="store_true",
                        help='Output one single score that is a corpus-level average.')
-    score.add_argument('-n', '--normalize', default=False, action="store_true",
-                       help='Normalize scores by target sequence length.')
+    score.add_argument('-n', '--normalize', default=0.6, action="store_true",
+                       help='Normalize scores by pow(target sequence length, n)')
     score.add_argument('--source', type=str, required=True, dest='source_data',
                        help='the source training data, a tokenized, plain text file.')
     score.add_argument('--target', type=str, required=True, dest='target_data',

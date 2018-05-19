@@ -11,7 +11,7 @@ from daikon.vocab import Vocabulary
 from daikon.compgraph import define_computation_graph
 
 
-def score(source_data: str, target_data: str, load_from: str, corpus_average: bool, normalize: bool, **kwargs):
+def score(source_data: str, target_data: str, load_from: str, corpus_average: bool, normalize: float = 0.6, **kwargs):
     """Scores a text using a trained translation model. See argument description in `bin/daikon`."""
 
     # fix batch size at 1 to get individual scores for sentences
@@ -44,7 +44,7 @@ def score(source_data: str, target_data: str, load_from: str, corpus_average: bo
             l = l[0]
             if normalize:
                 # normalize by length of target sequence (including EOS token)
-                l /= y.shape[1]
+                l /= np.power(y.shape[1], normalize)
 
             losses.append(l)
             total_iter += 1
