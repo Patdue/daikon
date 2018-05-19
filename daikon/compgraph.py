@@ -48,10 +48,19 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
                                                                  dtype=tf.float32)
 
     with tf.variable_scope("Decoder"):
+        # Create an attention mechanism
+        attention_mechanism = tf.contrib.seq2seq.LuongAttention(C.HIDDEN_SIZE, encoder_outputs)
+
         decoder_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
+        decoder_cell = tf.contrib.seq2seq.AttentionWrapper(decoder_cell,
+            attention_mechanism, attention_layer_size=C.HIDDEN_SIZE)
+
+        decoder_initial_state = decoder_cell.zero_state(batch_size, dtype=tf.float32).clone(
+            cell_state=encoder_final_state)
+
         decoder_outputs, decoder_final_state = tf.nn.dynamic_rnn(decoder_cell,
                                                                  decoder_inputs_embedded,
-                                                                 initial_state=encoder_final_state,
+                                                                 initial_state=decoder_initial_state,
                                                                  dtype=tf.float32)
 
     with tf.variable_scope("Logits"):
