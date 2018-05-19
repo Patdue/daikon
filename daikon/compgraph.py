@@ -39,13 +39,14 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
         decoder_inputs_embedded = tf.nn.embedding_lookup(target_embedding, decoder_inputs)
 
     with tf.variable_scope("Encoder"):
-        encoder_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
-        initial_state = encoder_cell.zero_state(batch_size, tf.float32)
+        # Construct forward and backward cells
+        forward_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
+        backward_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
 
-        encoder_outputs, encoder_final_state = tf.nn.dynamic_rnn(encoder_cell,
-                                                                 encoder_inputs_embedded,
-                                                                 initial_state=initial_state,
-                                                                 dtype=tf.float32)
+        bi_outputs, encoder_final_state = tf.nn.bidirectional_dynamic_rnn(
+            forward_cell, backward_cell, encoder_inputs_embedded, dtype=tf.float32)
+
+        encoder_outputs = tf.concat(bi_outputs, -1)
 
     with tf.variable_scope("Decoder"):
         # Create an attention mechanism
@@ -55,8 +56,10 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
         decoder_cell = tf.contrib.seq2seq.AttentionWrapper(decoder_cell,
             attention_mechanism, attention_layer_size=C.HIDDEN_SIZE)
 
-        decoder_initial_state = decoder_cell.zero_state(batch_size, dtype=tf.float32).clone(
-            cell_state=encoder_final_state)
+        # To match the two layers of the bidirectional encoder
+        decoder_cell = tf.contrib.rnn.MultiRNNCell([decoder_cell] * 2)
+
+        decoder_initial_state = decoder_cell.zero_state(batch_size, dtype=tf.float32)
 
         decoder_outputs, decoder_final_state = tf.nn.dynamic_rnn(decoder_cell,
                                                                  decoder_inputs_embedded,
