@@ -40,8 +40,8 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
 
     with tf.variable_scope("Encoder"):
         # Construct forward and backward cells
-        forward_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
-        backward_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
+        forward_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE/2)
+        backward_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE/2)
 
         bi_outputs, encoder_final_state = tf.nn.bidirectional_dynamic_rnn(
             forward_cell, backward_cell, encoder_inputs_embedded, dtype=tf.float32)
@@ -55,9 +55,6 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
         decoder_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
         decoder_cell = tf.contrib.seq2seq.AttentionWrapper(decoder_cell,
             attention_mechanism, attention_layer_size=C.HIDDEN_SIZE)
-
-        # To match the two layers of the bidirectional encoder
-        decoder_cell = tf.contrib.rnn.MultiRNNCell([decoder_cell] * 2)
 
         decoder_initial_state = decoder_cell.zero_state(batch_size, dtype=tf.float32)
 
